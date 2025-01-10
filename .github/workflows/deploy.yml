@@ -1,0 +1,52 @@
+name: 部署到 static 分支
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+env:
+  TZ: Asia/Shanghai
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@main
+        with:
+          ref: main
+          
+      - name: 缓存项目 npm 包
+        id: cache-node-modules
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ matrix.node-version }}-nodeModules-${{ hashFiles('package-lock.json') }}-${{ hashFiles('package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.node-version }}-nodeModules-
+
+      - name: 设置 Node.js 环境
+        uses: actions/setup-node@main
+        with:
+          node-version: '20'
+
+      - name: 安装依赖
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm i --save
+
+      - name: 构建 Astro 站点
+        run: npm run build
+
+      - name: 部署到 static 分支
+        run: |
+          cd ./dist
+          git init
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add .
+          git commit -m "🤓$(date +"%Z %Y-%m-%d %A %H:%M:%S")"
+          git push --force --quiet "https://willow-god:${{ secrets.GITHUB_TOKEN }}@github.com/willow-god/daily-hot.git" master:refs/heads/page
