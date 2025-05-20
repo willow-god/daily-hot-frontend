@@ -11,7 +11,7 @@
 
 > 这里是示例站点
 
-- [今日热榜 - https://hot.liushen.fun/](https://hot.liushen.fun/)
+- [今日热榜 - https://hot.imsyy.top/](https://hot.imsyy.top/)
 
 
 ## 部署

@@ -1,3 +1,5 @@
+@import url("https://jsd.liiiu.cn/gh/willow-god/Sharding-fonts/ZhuqueFangsong-Regular/result.css");
+
 // 全局样式
 * {
   margin: 0;
@@ -10,6 +12,7 @@ html,
 body,
 #app {
   height: 100%;
+  font-family: "Zhuque Fangsong (technical preview)", "Noto Sans SC", sans-serif;
 }
 
 // 动画
@@ -22,5 +25,3 @@ body,
 .fade-leave-to {
   opacity: 0;
 }
-
-
