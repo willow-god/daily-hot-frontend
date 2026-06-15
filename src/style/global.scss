@@ -15,6 +15,54 @@ body,
   font-family: "Zhuque Fangsong (technical preview)", "Noto Sans SC", sans-serif;
 }
 
+html {
+  background: #f4f0e8;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  color: #1d1c19;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.76), rgba(244, 240, 232, 0.94)),
+    repeating-linear-gradient(
+      0deg,
+      rgba(36, 34, 30, 0.035) 0,
+      rgba(36, 34, 30, 0.035) 1px,
+      transparent 1px,
+      transparent 34px
+    );
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  color: #fff;
+  background: #176f65;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: rgba(33, 33, 33, 0.28);
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(33, 33, 33, 0.42);
+  background-clip: content-box;
+}
+
 // 动画
 .fade-enter-active,
 .fade-leave-active {

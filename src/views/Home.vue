@@ -1,28 +1,25 @@
 <template>
   <div class="home">
-    <!-- <n-alert type="info" :show-icon="false" style="margin-bottom: 20px">
-      站点未完工
-    </n-alert> -->
     <n-grid
-      v-if="store.newsArr[0] && store.newsArr.filter((item) => item.show)[0]"
+      v-if="visibleNewsArr.length"
       cols="1 560:2 800:3 1100:4 1500:5"
       :x-gap="24"
       :y-gap="24"
     >
       <n-grid-item
         class="news-card"
-        v-for="(item, index) in store.newsArr.filter((item) => item.show)"
-        :key="item"
+        v-for="(item, index) in visibleNewsArr"
+        :key="item.name"
         :style="{ animationDelay: index / 10 + 0.2 + 's' }"
       >
-        <HotList :hotData="item" />
+        <HotList :hotData="item" @load-failed="hideFailedCard" />
       </n-grid-item>
     </n-grid>
     <div class="error" v-else>
       <n-divider dashed class="tip"> 此处暂无内容 </n-divider>
       <n-space justify="center">
         <n-button size="large" secondary strong @click="reset">
-          出错了？点此重置
+          出错了？点击重置
         </n-button>
       </n-space>
     </div>
@@ -34,13 +31,23 @@ import { mainStore } from "@/store";
 import HotList from "@/components/HotList.vue";
 
 const store = mainStore();
+const hiddenFailedNames = ref(new Set());
 
-// 重置
+const visibleNewsArr = computed(() =>
+  store.newsArr.filter(
+    (item) => item.show && !hiddenFailedNames.value.has(item.name)
+  )
+);
+
+const hideFailedCard = (name) => {
+  hiddenFailedNames.value = new Set([...hiddenFailedNames.value, name]);
+};
+
 const reset = () => {
   $dialog.warning({
     title: "重置站点",
     content:
-      "确认重置站点？你的自定义数据将会恢复为默认状态！（当设置页面能正常进入并显示时请不要执行此操作！）",
+      "确认重置站点？你的自定义数据将会恢复为默认状态。（当设置页面能正常进入并显示时请不要执行此操作。）",
     positiveText: "重置",
     negativeText: "取消",
     onPositiveClick: () => {
@@ -54,18 +61,37 @@ const reset = () => {
 
 <style lang="scss" scoped>
 .home {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(120deg, rgba(235, 68, 77, 0.05), transparent 34%),
+      linear-gradient(240deg, rgba(28, 132, 118, 0.06), transparent 38%),
+      repeating-linear-gradient(
+        90deg,
+        rgba(20, 20, 20, 0.025) 0,
+        rgba(20, 20, 20, 0.025) 1px,
+        transparent 1px,
+        transparent 42px
+      );
+    z-index: -1;
+  }
+
   .news-card {
     opacity: 0;
     transform: translateY(20px);
-    animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
-    animation: cardShow 0.3s forwards ease-in-out;
+    animation: cardShow 0.45s forwards cubic-bezier(0.22, 1, 0.36, 1);
   }
+
   .tip {
     font-size: 22px;
   }
 }
 
-// 出现动画
 @keyframes cardShow {
   0% {
     opacity: 0;

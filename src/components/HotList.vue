@@ -5,6 +5,7 @@
     :footer-style="{ padding: '16px' }"
     :id="`hot-list-${hotData.name}`"
     class="hot-list"
+    :class="{ 'is-error': loadingError }"
     hoverable
     @click="toList"
   >
@@ -21,7 +22,8 @@
         <n-text v-if="hotListData?.type" class="subtitle" :depth="2">
           {{ hotListData.type }}
         </n-text>
-        <n-skeleton v-else width="60px" text round />
+        <n-skeleton v-else-if="!loadingError" width="60px" text round />
+        <n-text v-else class="subtitle error-subtitle">跳过中</n-text>
       </n-space>
     </template>
     <n-scrollbar class="news-list" ref="scrollbarRef">
@@ -30,15 +32,13 @@
           <n-result
             size="small"
             status="500"
-            title="哎呀，加载失败了"
-            description="生活总会遇到不如意的事情"
-            style="margin-top: 40px"
+            title="加载失败"
+            description="3 秒后自动跳过该来源"
           />
           <n-button
             size="small"
             secondary
             strong
-            round
             @click.stop="getHotListsData(hotData.name)"
           >
             <template #icon>
@@ -54,7 +54,7 @@
           <div
             class="item"
             v-for="(item, index) in hotListData.data.slice(0, 15)"
-            :key="item"
+            :key="item.url || item.mobileUrl || item.title"
           >
             <n-text
               class="num"
@@ -83,8 +83,13 @@
     </n-scrollbar>
     <template #footer>
       <Transition name="fade" mode="out-in">
-        <template v-if="!hotListData">
-          <div class="loading">
+        <template v-if="loadingError">
+          <div class="message error-message">
+            <n-text class="time" :depth="3">连接异常，正在移出队列</n-text>
+          </div>
+        </template>
+        <template v-else-if="!hotListData">
+          <div class="loading footer-loading">
             <n-skeleton text round />
           </div>
         </template>
@@ -101,7 +106,6 @@
                     size="tiny"
                     secondary
                     strong
-                    round
                     @click.stop="toList"
                   >
                     <template #icon>
@@ -117,7 +121,6 @@
                     size="tiny"
                     secondary
                     strong
-                    round
                     @click.stop="getNewData"
                   >
                     <template #icon>
@@ -144,73 +147,89 @@ import { useRouter } from "vue-router";
 
 const router = useRouter();
 const store = mainStore();
+const emit = defineEmits(["load-failed"]);
 const props = defineProps({
-  // 热榜数据
   hotData: {
     type: Object,
-    default: {},
+    default: () => ({}),
   },
 });
 
-// 更新时间
 const updateTime = ref(null);
-
-// 刷新按钮数据
 const lastClickTime = ref(
-  localStorage.getItem(`${props.hotData.name}Btn`) || 0
+  Number(localStorage.getItem(`${props.hotData.name}Btn`) || 0)
 );
-
-// 热榜数据
 const hotListData = ref(null);
 const scrollbarRef = ref(null);
 const listLoading = ref(false);
 const loadingError = ref(false);
 
-// 获取热榜数据
+let hideFailedCardTimer = null;
+let observer = null;
+
+const clearFailedCardTimer = () => {
+  if (hideFailedCardTimer) {
+    clearTimeout(hideFailedCardTimer);
+    hideFailedCardTimer = null;
+  }
+};
+
+const scheduleFailedCardHide = () => {
+  clearFailedCardTimer();
+  hideFailedCardTimer = setTimeout(() => {
+    emit("load-failed", props.hotData.name);
+  }, 3000);
+};
+
+const handleLoadFailure = (message) => {
+  listLoading.value = false;
+  loadingError.value = true;
+  $message.error(message);
+  scheduleFailedCardHide();
+};
+
 const getHotListsData = async (name, isNew = false) => {
   try {
-    // hotListData.value = null;
+    clearFailedCardTimer();
     loadingError.value = false;
-    const item = store.newsArr.find((item) => item.name == name);
+    const item = store.newsArr.find((item) => item.name === name);
+
+    if (!item) {
+      handleLoadFailure("榜单配置不存在，请刷新后重试");
+      return;
+    }
+
     const result = await getHotLists(item.name, isNew, item.params);
-    // console.log(result);
+
     if (result.code === 200) {
       listLoading.value = false;
       hotListData.value = result;
-      // 滚动至顶部
       if (scrollbarRef.value) {
         scrollbarRef.value.scrollTo({ position: "top", behavior: "smooth" });
       }
     } else {
-      loadingError.value = true;
-      $message.error(result.title + result.message);
+      handleLoadFailure(result.title + result.message);
     }
   } catch (error) {
-    loadingError.value = true;
-    $message.error("热榜加载失败，请重试");
+    handleLoadFailure("热榜加载失败，请稍后重试");
   }
 };
 
-// 获取最新数据
 const getNewData = () => {
   const now = Date.now();
   if (now - lastClickTime.value > 60000) {
-    // 点击事件
     listLoading.value = true;
     getHotListsData(props.hotData.name, true);
-    // 更新最后一次点击时间
     lastClickTime.value = now;
     localStorage.setItem(`${props.hotData.name}Btn`, now);
   } else {
-    // 不执行点击事件
     $message.info("请稍后再刷新");
   }
 };
 
-// 链接跳转
 const jumpLink = (data) => {
-  if (!data.url || !data.mobileUrl) return $message.error("链接不存在");
-  const url = window.innerWidth > 680 ? data.url : data.mobileUrl;
+  const url = window.innerWidth > 680 ? data.url : data.mobileUrl || data.url;
+  if (!url) return $message.error("链接不存在");
   if (store.linkOpenType === "open") {
     window.open(url, "_blank");
   } else if (store.linkOpenType === "href") {
@@ -218,7 +237,6 @@ const jumpLink = (data) => {
   }
 };
 
-// 前往全部列表
 const toList = () => {
   if (props.hotData.name) {
     router.push({
@@ -232,15 +250,15 @@ const toList = () => {
   }
 };
 
-// 判断列表是否显示
 const checkListShow = () => {
   const typeName = props.hotData.name;
-  const listId = "hot-list-" + typeName;
-  const listDom = document.getElementById(listId);
-  const observer = new IntersectionObserver((entries) => {
+  const listDom = document.getElementById("hot-list-" + typeName);
+
+  if (!listDom) return;
+
+  observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
-        console.log(`👀 ${typeName} 可见，开始加载`);
         getHotListsData(props.hotData.name);
         observer.unobserve(entry.target);
       }
@@ -249,7 +267,6 @@ const checkListShow = () => {
   observer.observe(listDom);
 };
 
-// 实时改变更新时间
 watch(
   () => store.timeData,
   () => {
@@ -262,32 +279,112 @@ watch(
 onMounted(() => {
   checkListShow();
 });
+
+onBeforeUnmount(() => {
+  clearFailedCardTimer();
+  observer?.disconnect();
+});
 </script>
 
 <style lang="scss" scoped>
 .hot-list {
-  border-radius: 12px;
-  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid rgba(32, 31, 28, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(250, 247, 240, 0.8)),
+    radial-gradient(circle at 12% 10%, rgba(255, 255, 255, 0.9), transparent 34%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(36, 34, 30, 0.018) 0,
+      rgba(36, 34, 30, 0.018) 1px,
+      transparent 1px,
+      transparent 18px
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    inset 0 -1px 0 rgba(38, 36, 31, 0.035),
+    0 16px 34px rgba(34, 32, 28, 0.08);
+  transition:
+    border-color 0.28s ease,
+    box-shadow 0.28s ease,
+    transform 0.28s ease,
+    background-color 0.28s ease;
   cursor: pointer;
+
+  &:hover {
+    border-color: rgba(44, 112, 103, 0.28);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      inset 0 -1px 0 rgba(38, 36, 31, 0.04),
+      0 22px 52px rgba(34, 32, 28, 0.13);
+    transform: translateY(-4px);
+  }
+
+  &.is-error {
+    border-color: rgba(177, 65, 65, 0.24);
+    background:
+      linear-gradient(180deg, rgba(255, 250, 247, 0.98), rgba(250, 244, 238, 0.82)),
+      repeating-linear-gradient(
+        0deg,
+        rgba(177, 65, 65, 0.045) 0,
+        rgba(177, 65, 65, 0.045) 1px,
+        transparent 1px,
+        transparent 18px
+      );
+  }
+
   .title {
     display: flex;
     align-items: center;
     font-size: 16px;
     height: 26px;
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -14px;
+      height: 1px;
+      background: linear-gradient(
+        90deg,
+        rgba(32, 31, 28, 0.14),
+        rgba(32, 31, 28, 0.04) 62%,
+        transparent
+      );
+    }
+
     .name {
       display: flex;
       align-items: center;
+      min-width: 0;
+
       .n-avatar {
         background-color: transparent;
-        width: 20px;
-        height: 20px;
-        margin-right: 8px;
+        width: 24px;
+        height: 24px;
+        margin-right: 10px;
+        filter: saturate(0.88) contrast(1.04);
+      }
+
+      .name-text {
+        font-weight: 700;
+        letter-spacing: 0;
+        line-height: 1;
       }
     }
 
     .subtitle {
       margin-left: auto;
       font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .error-subtitle {
+      color: #b7353e;
     }
   }
 
@@ -299,8 +396,12 @@ onMounted(() => {
     height: 24px;
 
     .time {
-      padding: 0 6px;
+      padding: 0;
     }
+  }
+
+  .error-message {
+    align-items: center;
   }
 
   :deep(.news-list) {
@@ -314,8 +415,15 @@ onMounted(() => {
       display: flex;
       flex-direction: column;
       align-items: center;
+      padding: 30px 0 0;
+
+      .n-result {
+        --n-title-font-size: 18px;
+      }
+
       .n-button {
         margin-top: 12px;
+        border-radius: 6px;
       }
     }
 
@@ -328,51 +436,65 @@ onMounted(() => {
   }
 
   .lists {
-    padding-right: 6px;
+    padding: 8px 6px 0 0;
 
     .item {
       display: flex;
       align-items: center;
-      margin-bottom: 6px;
-      padding-bottom: 2px;
+      margin-bottom: 4px;
+      padding: 5px 7px 5px 2px;
       min-height: 30px;
-      border-radius: 8px;
-      transition: all 0.3s;
+      border-radius: 6px;
+      transition:
+        box-shadow 0.24s ease,
+        background-color 0.24s ease,
+        transform 0.24s ease;
       cursor: pointer;
 
       &:nth-last-of-type(1) {
         margin-bottom: 0;
       }
 
+      &:hover {
+        background: rgba(255, 255, 255, 0.62);
+        box-shadow:
+          inset 0 0 0 1px rgba(38, 36, 31, 0.06),
+          0 8px 18px rgba(38, 36, 31, 0.055);
+        transform: translateX(2px);
+      }
+
+      &:hover .num {
+        background-color: rgba(32, 31, 28, 0.12);
+      }
+
       .num {
-        width: 24px;
-        height: 24px;
-        min-width: 24px;
-        margin-right: 8px;
+        width: 26px;
+        height: 26px;
+        min-width: 26px;
+        margin-right: 10px;
         font-size: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        background-color: var(--n-border-color);
-        border-radius: 8px;
-        transition: all 0.3s;
-
-        &:hover {
-          background-color: var(--n-close-color-hover);
-        }
+        background-color: rgba(32, 31, 28, 0.075);
+        border-radius: 6px;
+        font-variant-numeric: tabular-nums;
+        transition:
+          background-color 0.24s ease,
+          transform 0.24s ease;
 
         &.one {
-          background-color: #ea444d;
+          background-color: #b7353e;
           color: #fff;
         }
 
         &.two {
-          background-color: #ed702d;
+          background-color: #8f6b2d;
           color: #fff;
         }
 
         &.three {
-          background-color: #eead3f;
+          background-color: #2f756b;
           color: #fff;
         }
       }
@@ -381,35 +503,23 @@ onMounted(() => {
         position: relative;
         display: inline-block;
         width: 100%;
-        transition: all 0.3s;
+        line-height: 1.55;
+        color: rgba(29, 28, 25, 0.92);
+        transition:
+          color 0.24s ease,
+          transform 0.24s ease;
 
         @media (min-width: 768px) {
           &:hover {
-            transform: translateX(4px);
-
-            &::after {
-              width: 90%;
-            }
+            color: #164f49;
+            transform: translateX(2px);
           }
         }
 
         @media (max-width: 768px) {
           &:active {
-            color: #ea444d;
+            color: #d83942;
           }
-        }
-
-        &::after {
-          content: "";
-          width: 0;
-          height: 2px;
-          max-height: 2px;
-          background-color: var(--n-close-color-pressed);
-          position: absolute;
-          left: 0;
-          bottom: -2px;
-          border-radius: 8px;
-          transition: all 0.3s;
         }
       }
     }
@@ -422,7 +532,7 @@ onMounted(() => {
   }
 
   :deep(.n-card__footer) {
-    .loading {
+    .footer-loading {
       height: 24px;
     }
   }

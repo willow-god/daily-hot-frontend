@@ -228,6 +228,11 @@ onBeforeUnmount(() => {
   top: 0;
   background-color: transparent;
   transition: all 0.3s;
+
+  :deep(.n-card__content) {
+    width: 100%;
+  }
+
   section {
     width: 100%;
     max-width: 1800px;
@@ -236,6 +241,7 @@ onBeforeUnmount(() => {
     grid-template-columns: repeat(3, 1fr);
     align-items: center;
     justify-content: space-between;
+
     .logo {
       display: flex;
       flex-direction: row;
@@ -245,6 +251,7 @@ onBeforeUnmount(() => {
         width: 50px;
         height: 50px;
         margin-right: 16px;
+        background-color: transparent;
         transition: all 0.3s;
       }
       .name {
@@ -254,6 +261,7 @@ onBeforeUnmount(() => {
           &:nth-of-type(1) {
             font-size: 20px;
             font-weight: bold;
+            letter-spacing: 0;
             transition: all 0.3s;
           }
           &:nth-of-type(2) {

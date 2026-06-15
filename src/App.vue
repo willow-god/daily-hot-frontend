@@ -62,7 +62,7 @@ onMounted(() => {
       box-sizing: border-box;
       &.show {
         height: 70px;
-        border-bottom: 2px solid var(--n-border-color);
+        border-bottom: 1px solid var(--n-border-color);
         background-color: var(--n-color);
         :deep(section) {
           .logo {
