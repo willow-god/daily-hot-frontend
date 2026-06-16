@@ -59,10 +59,10 @@ assert(
 );
 
 assert(
-  appSource.includes("--hot-card-bg: rgba(255, 255, 255, 0.88);") &&
-    appSource.includes("--hot-card-bg-hover: rgba(255, 255, 255, 0.94);") &&
-    appSource.includes("--hot-card-bg: rgba(0, 0, 0, 0.66);") &&
-    appSource.includes("--hot-card-bg-hover: rgba(0, 0, 0, 0.74);"),
+  appSource.includes("--hot-card-bg: rgba(255, 255, 255, 0.7);") &&
+    appSource.includes("--hot-card-bg-hover: rgba(255, 255, 255, 0.8);") &&
+    appSource.includes("--hot-card-bg: rgba(0, 0, 0, 0.56);") &&
+    appSource.includes("--hot-card-bg-hover: rgba(0, 0, 0, 0.66);"),
   "HotList card surfaces should be more transparent while keeping text fully opaque"
 );
 
