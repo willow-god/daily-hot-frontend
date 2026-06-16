@@ -70,8 +70,8 @@ onMounted(() => {
     --site-text-color: #171717;
     --hot-card-text: #111111;
     --hot-card-subtext: #4f4f4f;
-    --hot-card-bg: rgba(255, 255, 255, 0.94);
-    --hot-card-bg-hover: rgba(255, 255, 255, 0.98);
+    --hot-card-bg: rgba(255, 255, 255, 0.88);
+    --hot-card-bg-hover: rgba(255, 255, 255, 0.94);
     --hot-card-border: rgba(255, 255, 255, 0.72);
     --hot-card-border-hover: rgba(20, 20, 20, 0.28);
     --hot-card-shadow: 0 18px 48px rgba(0, 0, 0, 0.18);
@@ -89,8 +89,8 @@ onMounted(() => {
     --site-text-color: #f3f3f3;
     --hot-card-text: #f7f7f7;
     --hot-card-subtext: #c9c9c9;
-    --hot-card-bg: rgba(0, 0, 0, 0.74);
-    --hot-card-bg-hover: rgba(0, 0, 0, 0.82);
+    --hot-card-bg: rgba(0, 0, 0, 0.66);
+    --hot-card-bg-hover: rgba(0, 0, 0, 0.74);
     --hot-card-border: rgba(255, 255, 255, 0.14);
     --hot-card-border-hover: rgba(255, 255, 255, 0.36);
     --hot-card-shadow: 0 18px 54px rgba(0, 0, 0, 0.46);

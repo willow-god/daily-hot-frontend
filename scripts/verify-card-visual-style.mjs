@@ -4,6 +4,7 @@ const hotListSource = readFileSync(
   new URL("../src/components/HotList.vue", import.meta.url),
   "utf8"
 );
+const appSource = readFileSync(new URL("../src/App.vue", import.meta.url), "utf8");
 
 const assert = (condition, message) => {
   if (!condition) throw new Error(message);
@@ -55,6 +56,14 @@ assert(
   !hotListSource.includes("opacity: 0.76") &&
     !hotListSource.includes("opacity: 0.7"),
   "HotList text should stay fully opaque and clear"
+);
+
+assert(
+  appSource.includes("--hot-card-bg: rgba(255, 255, 255, 0.88);") &&
+    appSource.includes("--hot-card-bg-hover: rgba(255, 255, 255, 0.94);") &&
+    appSource.includes("--hot-card-bg: rgba(0, 0, 0, 0.66);") &&
+    appSource.includes("--hot-card-bg-hover: rgba(0, 0, 0, 0.74);"),
+  "HotList card surfaces should be more transparent while keeping text fully opaque"
 );
 
 console.log("card visual style verification passed");

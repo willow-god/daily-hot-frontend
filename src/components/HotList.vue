@@ -55,6 +55,9 @@
             class="item"
             v-for="(item, index) in hotListData.data.slice(0, 15)"
             :key="item.url || item.mobileUrl || item.title"
+            @mouseenter="showTitleTooltip(item.title, $event)"
+            @mousemove="moveTitleTooltip"
+            @mouseleave="hideTitleTooltip"
           >
             <n-text
               class="num"
@@ -136,6 +139,19 @@
       </Transition>
     </template>
   </n-card>
+  <Teleport to="body">
+    <Transition name="title-tooltip-fade">
+      <div
+        v-if="titleTooltipVisible"
+        ref="titleTooltipRef"
+        class="title-tooltip"
+        :class="{ 'is-dark': store.siteTheme === 'dark' }"
+        :style="titleTooltipStyle"
+      >
+        {{ titleTooltipText }}
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup>
@@ -163,9 +179,20 @@ const hotListData = ref(null);
 const scrollbarRef = ref(null);
 const listLoading = ref(false);
 const loadingError = ref(false);
+const titleTooltipRef = ref(null);
+const titleTooltipText = ref("");
+const titleTooltipVisible = ref(false);
+const titleTooltipX = ref(0);
+const titleTooltipY = ref(0);
+const titleTooltipStyle = computed(() => ({
+  transform: `translate3d(${titleTooltipX.value}px, ${titleTooltipY.value}px, 0)`,
+}));
 
 let hideFailedCardTimer = null;
 let observer = null;
+const TITLE_TOOLTIP_GAP = 10;
+const TITLE_TOOLTIP_MARGIN = 10;
+const TITLE_TOOLTIP_DISABLE_WIDTH = 1024;
 
 const clearFailedCardTimer = () => {
   if (hideFailedCardTimer) {
@@ -186,6 +213,63 @@ const handleLoadFailure = (message) => {
   loadingError.value = true;
   $message.error(message);
   scheduleFailedCardHide();
+};
+
+const canShowTitleTooltip = () =>
+  window.innerWidth > TITLE_TOOLTIP_DISABLE_WIDTH &&
+  window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+const updateTitleTooltipPosition = ({ clientX, clientY }) => {
+  const tooltipWidth =
+    titleTooltipRef.value?.offsetWidth ||
+    Math.min(420, window.innerWidth - TITLE_TOOLTIP_MARGIN * 2);
+  const tooltipHeight = titleTooltipRef.value?.offsetHeight || 80;
+  const rightX = clientX + TITLE_TOOLTIP_GAP;
+  const leftX = clientX - tooltipWidth - TITLE_TOOLTIP_GAP;
+  const bottomY = clientY + TITLE_TOOLTIP_GAP;
+  const topY = clientY - tooltipHeight - TITLE_TOOLTIP_GAP;
+  const hasRightSpace =
+    rightX + tooltipWidth + TITLE_TOOLTIP_MARGIN <= window.innerWidth;
+  const hasBottomSpace =
+    bottomY + tooltipHeight + TITLE_TOOLTIP_MARGIN <= window.innerHeight;
+
+  titleTooltipX.value = Math.min(
+    Math.max(
+      hasRightSpace ? rightX : leftX,
+      TITLE_TOOLTIP_MARGIN
+    ),
+    window.innerWidth - tooltipWidth - TITLE_TOOLTIP_MARGIN
+  );
+  titleTooltipY.value = Math.min(
+    Math.max(
+      hasBottomSpace ? bottomY : topY,
+      TITLE_TOOLTIP_MARGIN
+    ),
+    window.innerHeight - tooltipHeight - TITLE_TOOLTIP_MARGIN
+  );
+};
+
+const moveTitleTooltip = (event) => {
+  if (!titleTooltipVisible.value) return;
+  if (!canShowTitleTooltip()) {
+    hideTitleTooltip();
+    return;
+  }
+  updateTitleTooltipPosition(event);
+};
+
+const showTitleTooltip = (title, event) => {
+  if (!title || !canShowTitleTooltip()) return;
+  titleTooltipText.value = title;
+  titleTooltipVisible.value = true;
+  updateTitleTooltipPosition(event);
+  requestAnimationFrame(() => {
+    if (titleTooltipVisible.value) updateTitleTooltipPosition(event);
+  });
+};
+
+const hideTitleTooltip = () => {
+  titleTooltipVisible.value = false;
 };
 
 const getHotListsData = async (name, isNew = false) => {
@@ -228,6 +312,7 @@ const getNewData = () => {
 };
 
 const jumpLink = (data) => {
+  hideTitleTooltip();
   const url = window.innerWidth > 680 ? data.url : data.mobileUrl || data.url;
   if (!url) return $message.error("链接不存在");
   if (store.linkOpenType === "open") {
@@ -278,10 +363,12 @@ watch(
 
 onMounted(() => {
   checkListShow();
+  window.addEventListener("resize", hideTitleTooltip);
 });
 
 onBeforeUnmount(() => {
   clearFailedCardTimer();
+  window.removeEventListener("resize", hideTitleTooltip);
   observer?.disconnect();
 });
 </script>
@@ -434,6 +521,7 @@ onBeforeUnmount(() => {
     .item {
       display: flex;
       align-items: center;
+      min-width: 0;
       margin-bottom: 4px;
       padding: 5px 8px;
       min-height: 30px;
@@ -492,9 +580,14 @@ onBeforeUnmount(() => {
 
       .text {
         position: relative;
-        display: inline-block;
-        width: 100%;
+        display: block;
+        flex: 1;
+        min-width: 0;
+        max-width: 100%;
         line-height: 1.55;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
         color: var(--hot-card-text);
         transition:
           color 0.24s ease,
@@ -512,6 +605,20 @@ onBeforeUnmount(() => {
           }
         }
       }
+
+      @media (max-width: 1024px), (hover: none), (pointer: coarse) {
+        align-items: flex-start;
+
+        &:hover {
+          transform: none;
+        }
+
+        .text {
+          white-space: normal;
+          overflow: visible;
+          text-overflow: clip;
+        }
+      }
     }
   }
 
@@ -526,5 +633,47 @@ onBeforeUnmount(() => {
       height: 24px;
     }
   }
+}
+
+.title-tooltip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 9999;
+  pointer-events: none;
+  width: max-content;
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border: 1px solid rgba(20, 20, 20, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.22);
+  color: #111111;
+  font-size: 14px;
+  line-height: 1.65;
+  letter-spacing: 0;
+  word-break: break-word;
+  white-space: normal;
+  will-change: transform;
+
+  &.is-dark {
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(0, 0, 0, 0.9);
+    box-shadow: 0 20px 52px rgba(0, 0, 0, 0.58);
+    color: #f7f7f7;
+  }
+}
+
+.title-tooltip-fade-enter-active,
+.title-tooltip-fade-leave-active {
+  transition:
+    opacity 0.14s ease,
+    filter 0.14s ease;
+}
+
+.title-tooltip-fade-enter-from,
+.title-tooltip-fade-leave-to {
+  opacity: 0;
+  filter: blur(2px);
 }
 </style>
