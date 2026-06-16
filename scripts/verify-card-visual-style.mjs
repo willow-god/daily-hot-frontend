@@ -27,6 +27,11 @@ assert(
 );
 
 assert(
+  hotListSource.includes("border-radius: 16px;"),
+  "HotList card should use a larger rounded corner"
+);
+
+assert(
   !hotListSource.includes("backdrop-filter: blur"),
   "HotList card should not blur its own backdrop because it can reduce perceived text clarity"
 );

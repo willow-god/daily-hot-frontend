@@ -290,7 +290,7 @@ onBeforeUnmount(() => {
 .hot-list {
   position: relative;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 16px;
   border: 1px solid var(--hot-card-border);
   background: var(--hot-card-bg);
   box-shadow: var(--hot-card-shadow);
@@ -414,7 +414,7 @@ onBeforeUnmount(() => {
 
       .n-button {
         margin-top: 12px;
-        border-radius: 6px;
+        border-radius: 10px;
       }
     }
 
@@ -437,7 +437,7 @@ onBeforeUnmount(() => {
       margin-bottom: 4px;
       padding: 5px 8px;
       min-height: 30px;
-      border-radius: 6px;
+      border-radius: 10px;
       transition:
         box-shadow 0.24s ease,
         background-color 0.24s ease,
@@ -471,7 +471,7 @@ onBeforeUnmount(() => {
         align-items: center;
         justify-content: center;
         background-color: var(--hot-muted-bg);
-        border-radius: 6px;
+        border-radius: 9px;
         font-variant-numeric: tabular-nums;
         transition:
           background-color 0.24s ease,

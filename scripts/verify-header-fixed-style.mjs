@@ -10,6 +10,8 @@ const assert = (condition, message) => {
   if (!condition) throw new Error(message);
 };
 
+const fixedHeaderBlock = appSource.match(/&\.fixed\s*\{[\s\S]*?main\s*\{/);
+
 assert(
   headerSource.includes("section {") &&
     !headerSource.includes("padding: 0 18px;") &&
@@ -31,6 +33,14 @@ assert(
     appSource.includes("border-bottom: 1px solid var(--n-border-color);") &&
     !appSource.includes("box-shadow: 0 12px 36px"),
   "Fixed header should be a simple original-style bar without heavy transition effects"
+);
+
+assert(
+  fixedHeaderBlock &&
+    fixedHeaderBlock[0].includes(".header") &&
+    fixedHeaderBlock[0].includes("position: fixed;") &&
+    !fixedHeaderBlock[0].includes("position: absolute;"),
+  "Header fixed option should pin the header to the viewport instead of the scroll content"
 );
 
 console.log("header fixed style verification passed");
