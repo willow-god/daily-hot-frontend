@@ -20,16 +20,36 @@ assert(
 );
 
 assert(
-  hotListSource.includes("box-shadow:") &&
-    hotListSource.includes("inset 0 1px 0") &&
-    hotListSource.includes("background:"),
-  "HotList card should use full-surface depth instead of one-sided color"
+  hotListSource.includes("background: var(--hot-card-bg);") &&
+    hotListSource.includes("box-shadow: var(--hot-card-shadow);") &&
+    hotListSource.includes("color: var(--hot-card-text);"),
+  "HotList card should use simple translucent white/black surfaces"
 );
 
 assert(
-  hotListSource.includes("&::after") &&
-    hotListSource.includes("&:hover .num"),
-  "HotList card should have structured header and row-level interaction details"
+  !hotListSource.includes("backdrop-filter: blur"),
+  "HotList card should not blur its own backdrop because it can reduce perceived text clarity"
+);
+
+assert(
+  hotListSource.includes(':content-style="{ padding: 0 }"') &&
+    hotListSource.includes(".n-scrollbar-rail") &&
+    hotListSource.includes("right: 3px;"),
+  "HotList scrollbar should sit near the card edge while inner content owns padding"
+);
+
+assert(
+  !hotListSource.includes("#b7353e") &&
+    !hotListSource.includes("#8f6b2d") &&
+    !hotListSource.includes("#2f756b") &&
+    !hotListSource.includes("#164f49"),
+  "HotList card should not use decorative mixed colors"
+);
+
+assert(
+  !hotListSource.includes("opacity: 0.76") &&
+    !hotListSource.includes("opacity: 0.7"),
+  "HotList text should stay fully opaque and clear"
 );
 
 console.log("card visual style verification passed");

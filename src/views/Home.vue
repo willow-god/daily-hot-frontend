@@ -63,24 +63,6 @@ const reset = () => {
 .home {
   position: relative;
 
-  &::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    background:
-      linear-gradient(120deg, rgba(235, 68, 77, 0.05), transparent 34%),
-      linear-gradient(240deg, rgba(28, 132, 118, 0.06), transparent 38%),
-      repeating-linear-gradient(
-        90deg,
-        rgba(20, 20, 20, 0.025) 0,
-        rgba(20, 20, 20, 0.025) 1px,
-        transparent 1px,
-        transparent 42px
-      );
-    z-index: -1;
-  }
-
   .news-card {
     opacity: 0;
     transform: translateY(20px);

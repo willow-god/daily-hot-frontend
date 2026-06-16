@@ -1,7 +1,7 @@
 <template>
   <n-card
     :header-style="{ padding: '16px' }"
-    :content-style="{ padding: '0 16px' }"
+    :content-style="{ padding: 0 }"
     :footer-style="{ padding: '16px' }"
     :id="`hot-list-${hotData.name}`"
     class="hot-list"
@@ -291,48 +291,31 @@ onBeforeUnmount(() => {
   position: relative;
   overflow: hidden;
   border-radius: 8px;
-  border: 1px solid rgba(32, 31, 28, 0.1);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(250, 247, 240, 0.8)),
-    radial-gradient(circle at 12% 10%, rgba(255, 255, 255, 0.9), transparent 34%),
-    repeating-linear-gradient(
-      0deg,
-      rgba(36, 34, 30, 0.018) 0,
-      rgba(36, 34, 30, 0.018) 1px,
-      transparent 1px,
-      transparent 18px
-    );
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.88),
-    inset 0 -1px 0 rgba(38, 36, 31, 0.035),
-    0 16px 34px rgba(34, 32, 28, 0.08);
+  border: 1px solid var(--hot-card-border);
+  background: var(--hot-card-bg);
+  box-shadow: var(--hot-card-shadow);
+  color: var(--hot-card-text);
   transition:
+    background-color 0.24s ease,
     border-color 0.28s ease,
     box-shadow 0.28s ease,
-    transform 0.28s ease,
-    background-color 0.28s ease;
+    transform 0.28s ease;
   cursor: pointer;
 
+  :deep(.n-text) {
+    color: var(--hot-card-text);
+  }
+
   &:hover {
-    border-color: rgba(44, 112, 103, 0.28);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.95),
-      inset 0 -1px 0 rgba(38, 36, 31, 0.04),
-      0 22px 52px rgba(34, 32, 28, 0.13);
+    border-color: var(--hot-card-border-hover);
+    background: var(--hot-card-bg-hover);
+    box-shadow: var(--hot-card-shadow-hover);
     transform: translateY(-4px);
   }
 
   &.is-error {
-    border-color: rgba(177, 65, 65, 0.24);
-    background:
-      linear-gradient(180deg, rgba(255, 250, 247, 0.98), rgba(250, 244, 238, 0.82)),
-      repeating-linear-gradient(
-        0deg,
-        rgba(177, 65, 65, 0.045) 0,
-        rgba(177, 65, 65, 0.045) 1px,
-        transparent 1px,
-        transparent 18px
-      );
+    border-color: var(--hot-card-border-hover);
+    background: var(--hot-card-bg-hover);
   }
 
   .title {
@@ -349,12 +332,7 @@ onBeforeUnmount(() => {
       right: 0;
       bottom: -14px;
       height: 1px;
-      background: linear-gradient(
-        90deg,
-        rgba(32, 31, 28, 0.14),
-        rgba(32, 31, 28, 0.04) 62%,
-        transparent
-      );
+      background: var(--hot-row-border-hover);
     }
 
     .name {
@@ -371,6 +349,7 @@ onBeforeUnmount(() => {
       }
 
       .name-text {
+        color: var(--hot-card-text);
         font-weight: 700;
         letter-spacing: 0;
         line-height: 1;
@@ -378,13 +357,14 @@ onBeforeUnmount(() => {
     }
 
     .subtitle {
+      color: var(--hot-card-subtext);
       margin-left: auto;
       font-size: 12px;
       white-space: nowrap;
     }
 
     .error-subtitle {
-      color: #b7353e;
+      color: var(--hot-card-subtext);
     }
   }
 
@@ -396,6 +376,7 @@ onBeforeUnmount(() => {
     height: 24px;
 
     .time {
+      color: var(--hot-card-subtext);
       padding: 0;
     }
   }
@@ -408,14 +389,24 @@ onBeforeUnmount(() => {
     height: 300px;
 
     .n-scrollbar-rail {
-      right: 0;
+      right: 3px;
+      width: 6px;
+    }
+
+    .n-scrollbar-rail__scrollbar {
+      border-radius: 999px;
+      background-color: var(--hot-scrollbar);
+    }
+
+    .n-scrollbar-rail__scrollbar:hover {
+      background-color: var(--hot-scrollbar-hover);
     }
 
     .error {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 30px 0 0;
+      padding: 30px 18px 0 16px;
 
       .n-result {
         --n-title-font-size: 18px;
@@ -432,17 +423,19 @@ onBeforeUnmount(() => {
       flex-direction: column;
       height: 300px;
       justify-content: space-between;
+      padding: 0 18px 0 16px;
+      box-sizing: border-box;
     }
   }
 
   .lists {
-    padding: 8px 6px 0 0;
+    padding: 10px 18px 0 16px;
 
     .item {
       display: flex;
       align-items: center;
       margin-bottom: 4px;
-      padding: 5px 7px 5px 2px;
+      padding: 5px 8px;
       min-height: 30px;
       border-radius: 6px;
       transition:
@@ -456,18 +449,19 @@ onBeforeUnmount(() => {
       }
 
       &:hover {
-        background: rgba(255, 255, 255, 0.62);
+        background: var(--hot-row-bg-hover);
         box-shadow:
-          inset 0 0 0 1px rgba(38, 36, 31, 0.06),
-          0 8px 18px rgba(38, 36, 31, 0.055);
+          inset 0 0 0 1px var(--hot-row-border-hover),
+          0 8px 18px rgba(0, 0, 0, 0.06);
         transform: translateX(2px);
       }
 
       &:hover .num {
-        background-color: rgba(32, 31, 28, 0.12);
+        background-color: var(--hot-muted-bg);
       }
 
       .num {
+        color: var(--hot-card-text);
         width: 26px;
         height: 26px;
         min-width: 26px;
@@ -476,7 +470,7 @@ onBeforeUnmount(() => {
         display: flex;
         align-items: center;
         justify-content: center;
-        background-color: rgba(32, 31, 28, 0.075);
+        background-color: var(--hot-muted-bg);
         border-radius: 6px;
         font-variant-numeric: tabular-nums;
         transition:
@@ -484,18 +478,15 @@ onBeforeUnmount(() => {
           transform 0.24s ease;
 
         &.one {
-          background-color: #b7353e;
-          color: #fff;
+          background-color: var(--hot-muted-bg);
         }
 
         &.two {
-          background-color: #8f6b2d;
-          color: #fff;
+          background-color: var(--hot-muted-bg);
         }
 
         &.three {
-          background-color: #2f756b;
-          color: #fff;
+          background-color: var(--hot-muted-bg);
         }
       }
 
@@ -504,21 +495,20 @@ onBeforeUnmount(() => {
         display: inline-block;
         width: 100%;
         line-height: 1.55;
-        color: rgba(29, 28, 25, 0.92);
+        color: var(--hot-card-text);
         transition:
           color 0.24s ease,
           transform 0.24s ease;
 
         @media (min-width: 768px) {
           &:hover {
-            color: #164f49;
             transform: translateX(2px);
           }
         }
 
         @media (max-width: 768px) {
           &:active {
-            color: #d83942;
+            transform: translateX(1px);
           }
         }
       }
